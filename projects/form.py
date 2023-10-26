@@ -14,9 +14,9 @@ class CompanyForm(ModelForm):
         model = Company
         fields = '__all__'
 
-class EmployeeRegistrationForm(UserCreationForm):
+class EmployeeRegistrationForm(forms.Form):
+    username = forms.CharField(max_length=150)
     email = forms.EmailField()
-
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password1', 'password2']
+    password = forms.CharField(widget=forms.PasswordInput)
+    # Add a field to choose the role
+    is_employee = forms.BooleanField(required=False, widget=forms.CheckboxInput)

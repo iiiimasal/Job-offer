@@ -5,10 +5,13 @@ from .models import Company , Job ,Employee
 from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth import authenticate,login,logout
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User ,Group
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from .form import JobForm ,CompanyForm ,EmployeeRegistrationForm
+from django.views.generic.edit import CreateView
+from django.utils.decorators import method_decorator
+
 
 
 #  q=request.GET.get('q') if request.GET.get('q') !=None else ''
@@ -96,6 +99,11 @@ def company(request,pk):
 
 @login_required(login_url='login')
 def createCompany(request):
+    if not request.user.groups.filter(name='Employees').exists():
+        # If not, redirect them to another page or show an error message
+        messages.error(request, "You don't have permission to create a company.")
+        return redirect('home-page')
+    
     form = CompanyForm()
     if request.method == 'POST':
        form = CompanyForm(request.POST)
@@ -107,19 +115,34 @@ def createCompany(request):
     return render(request, 'Company-form.html', context)
 
 
+
+
+
 def employee_registration(request):
     if request.method == 'POST':
         form = EmployeeRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            # Log the user in
-            login(request, user)
-            return redirect('home')  # Redirect to a success page
+            user = User.objects.create_user(
+                username=form.cleaned_data['username'],
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password']
+            )
+            
+            # Check if the user chose to be an employee
+            if form.cleaned_data.get('is_employee'):
+                employee_group, created = Group.objects.get_or_create(name='Employees')
+                user.groups.add(employee_group)
+            else:
+                employer_group, created = Group.objects.get_or_create(name='Employers')
+                user.groups.add(employer_group)
+            return redirect('login')  # Use the correct name of your login view
 
     else:
         form = EmployeeRegistrationForm()
 
-    return render(request, '', {'form': form})
+    return render(request, 'employee-register.html', {'form': form})
+
+
 def updatecompany(request,pk):
     company=Company.objects.get(id=pk)
     form=CompanyForm(instance=company)
@@ -149,3 +172,14 @@ def deletecompany(request , pk):
     print("hello")
     
     return render(request,'delete.html',{'obj':job})
+
+
+# @method_decorator(login_required, name='dispatch')
+# class CreateCompanyView(CreateView):
+#     model = Company
+#     fields = ['name', 'email', 'telephone_number', 'city', 'manager']
+#     template_name = 'your_template.html'
+    
+#     def form_valid(self, form):
+#         form.instance.user = self.request.user  # Associate the user with the company
+#         return super().form_valid(form)
