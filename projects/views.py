@@ -1,7 +1,7 @@
 from collections import Counter
 from django.shortcuts import render , redirect
 from django.http import HttpResponse
-from .models import Company , Job ,Employee
+from .models import Company , Job ,Employee , Message
 from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth import authenticate,login,logout
@@ -93,8 +93,21 @@ def Jobs(request,pk):
 
 def company(request,pk):
     company=Company.objects.get(id=pk)
-   
-    context={'company':company}        
+    messages = Message.objects.filter(company=company)
+    participants=company.participants.all()
+
+    if request.method=='POST':
+        message=Message.objects.create(
+            user=request.user,
+            company=company,
+            body=request.POST.get('body')
+            
+
+        )
+        return redirect ('companies',pk=company.pk)
+
+    # messages=Company.messages.all()
+    context={'company':company,'messages':messages ,'participants':participants}        
     return render(request,'company.html',context)
 
 @login_required(login_url='login')
@@ -174,12 +187,3 @@ def deletecompany(request , pk):
     return render(request,'delete.html',{'obj':job})
 
 
-# @method_decorator(login_required, name='dispatch')
-# class CreateCompanyView(CreateView):
-#     model = Company
-#     fields = ['name', 'email', 'telephone_number', 'city', 'manager']
-#     template_name = 'your_template.html'
-    
-#     def form_valid(self, form):
-#         form.instance.user = self.request.user  # Associate the user with the company
-#         return super().form_valid(form)
