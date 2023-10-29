@@ -15,4 +15,5 @@ urlpatterns = [
     path('delete-job/<str:pk>/',views.deletecompany,name='delete-company'),
     path('update-job/<str:pk>/',views.updatecompany,name='update-company'),
     path('register-employee/',views.employee_registration,name='employee-register'),
+    path('delete-message/<str:pk>/',views.deleteMessage,name='delete-message'),
 ]

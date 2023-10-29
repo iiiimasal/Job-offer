@@ -175,7 +175,7 @@ def updatecompany(request,pk):
 
     return render(request ,"Company-form.html", context)
 
-
+@login_required(login_url='login')
 def deletecompany(request , pk):
     job=Job.objects.get(id=pk)
     if request.method == 'POST':
@@ -185,5 +185,19 @@ def deletecompany(request , pk):
     print("hello")
     
     return render(request,'delete.html',{'obj':job})
+
+@login_required(login_url='login')
+def deleteMessage(request , pk):
+    message=Message.objects.get(id=pk)
+    if request.user!=message.user:
+        return HttpResponse( "You are not allowed ")
+    
+    if request.method == 'POST':
+        message.delete()
+        
+        return redirect('home-page')
+    
+    
+    return render(request,'delete.html',{'obj':message})
 
 
