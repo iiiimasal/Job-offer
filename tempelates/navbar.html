@@ -10,10 +10,13 @@
 </ul>
 {% endif %}
 </form>
-
+<a href="{% url 'jobs-list' %}">view job offers</a>
 {% if request.user.is_authenticated %}
 <p>Hello {{request.user}}</p>
+<a href="{% url 'create-job' %}">create a ad</a>
 <a href="{% url 'logout' %}">Logout</a>
+
+
 {% else %}
 
 
@@ -21,5 +24,5 @@
 <a href="{% url 'login' %}">Login</a>
 {% endif %}
 
-<a href="{% url 'employee-register' %}">Register</a>
+<a href="{% url 'employer-register' %}">Register</a>
 <hr>

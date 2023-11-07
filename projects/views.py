@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate,login,logout
 from django.contrib.auth.models import User ,Group
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
-from .form import JobForm ,CompanyForm ,EmployeeRegistrationForm
+from .form import JobForm ,CompanyForm ,EmployerRegistrationForm
 from django.views.generic.edit import CreateView
 from django.utils.decorators import method_decorator
 
@@ -110,6 +110,12 @@ def company(request,pk):
     context={'company':company,'messages':messages ,'participants':participants}        
     return render(request,'company.html',context)
 
+def userProfile(request, pk):
+    user=User.objects.get(id=pk)
+    companies=user.company_set.all()
+    context={'user':user,'companies':companies}
+    return render(request,'profile.html',context)
+
 @login_required(login_url='login')
 def createCompany(request):
     if not request.user.groups.filter(name='Employees').exists():
@@ -131,29 +137,37 @@ def createCompany(request):
 
 
 
-def employee_registration(request):
+def employer_registration(request):
     if request.method == 'POST':
-        form = EmployeeRegistrationForm(request.POST)
+        form = EmployerRegistrationForm(request.POST)
         if form.is_valid():
             user = User.objects.create_user(
                 username=form.cleaned_data['username'],
                 email=form.cleaned_data['email'],
-                password=form.cleaned_data['password']
+                password=form.cleaned_data['password'],
+                first_name=form.cleaned_data['first_name'],  # Add first name field
+                last_name=form.cleaned_data['last_name'],    # Add last name field
+                # gender=form.cleaned_data['gender'],
+                city=form.cleaned_data['city'],
+                certificate=form.cleaned_data['certificate'],
+                degree=form.cleaned_data['degree'],
+                age=form.cleaned_data['age'],
+                job=form.cleaned_data['job'],
             )
-            
+
             # Check if the user chose to be an employee
-            if form.cleaned_data.get('is_employee'):
-                employee_group, created = Group.objects.get_or_create(name='Employees')
-                user.groups.add(employee_group)
-            else:
-                employer_group, created = Group.objects.get_or_create(name='Employers')
+            if form.cleaned_data.get('is_employer'):
+                employee_group, created = Group.objects.get_or_create(name='Employers')
                 user.groups.add(employer_group)
+            else:
+                employer_group, created = Group.objects.get_or_create(name='Employees')
+                user.groups.add(employee_group)
             return redirect('login')  # Use the correct name of your login view
 
     else:
-        form = EmployeeRegistrationForm()
+        form = EmployerRegistrationForm()
 
-    return render(request, 'employee-register.html', {'form': form})
+    return render(request, 'employer-register.html', {'form': form})
 
 
 def updatecompany(request,pk):
@@ -200,4 +214,32 @@ def deleteMessage(request , pk):
     
     return render(request,'delete.html',{'obj':message})
 
+@login_required(login_url='login')
+def create_job(request):
+    if request.method == 'POST':
+        form = JobForm(request.POST)
+        if form.is_valid():
+            job = form.save(commit=False)
+            # job.company = request.user.emoloyer.company  # Assign the current user's company to the job
+            job.save()
+            return redirect('home-page')  # Replace 'jobs-list' with the URL of the job listings page
 
+    else:
+        form = JobForm()
+
+    return render(request, 'create-job.html', {'form': form})
+
+
+def job_page(request):
+    q = request.GET.get('q') if request.GET.get('q') is not None else ''
+    city = request.GET.get('city', '')
+    jobs = Job.objects.filter(title__icontains=q, company__city__icontains=city)
+    titles = Job.objects.values('title').distinct()
+    cities = Company.objects.values('city').distinct()
+    
+    context = {'jobs': jobs, 'titles': titles, 'cities': cities}
+
+    # companies=Company.objects.all()
+    context={'jobs':jobs,'titles':titles,'cities':cities}
+    print(context)
+    return render(request, 'jobs-list.html', context) 
