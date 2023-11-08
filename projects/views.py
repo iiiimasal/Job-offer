@@ -230,16 +230,50 @@ def create_job(request):
     return render(request, 'create-job.html', {'form': form})
 
 
+# def job_page(request):
+#     q = request.GET.get('q') if request.GET.get('q') is not None else ''
+#     city = request.GET.get('city', '')
+#     jobs = Job.objects.filter(title__icontains=q, company__city__icontains=city)
+#     titles = Job.objects.values('title').distinct()
+#     cities = Company.objects.values('city').distinct()
+    
+#     context = {'jobs': jobs, 'titles': titles, 'cities': cities}
+
+#     # companies=Company.objects.all()
+#     context={'jobs':jobs,'titles':titles,'cities':cities}
+#     print(context)
+#     return render(request, 'jobs-list.html', context) 
+
+
+
+
+
 def job_page(request):
-    q = request.GET.get('q') if request.GET.get('q') is not None else ''
-    city = request.GET.get('city', '')
-    jobs = Job.objects.filter(title__icontains=q, company__city__icontains=city)
+    query = request.GET.get('q', '')
+    jobs = Job.objects.all()
     titles = Job.objects.values('title').distinct()
     cities = Company.objects.values('city').distinct()
-    
-    context = {'jobs': jobs, 'titles': titles, 'cities': cities}
 
-    # companies=Company.objects.all()
-    context={'jobs':jobs,'titles':titles,'cities':cities}
-    print(context)
-    return render(request, 'jobs-list.html', context) 
+    if query:
+        # Split the query into words
+        words = query.split()
+
+        # Create a Q object to build the filter dynamically
+        q_objects = Q()
+
+        for word in words:
+            # You can define how to filter the job listings here
+            # For example, you can search in job titles and company cities
+            q_objects |= Q(title__icontains=word) | Q(company__city__icontains=word)
+
+        # Apply the filter
+        jobs = jobs.filter(q_objects)
+
+    context = {'jobs': jobs, 'query': query, 'titles': titles, 'cities': cities}
+
+    return render(request, 'jobs-list.html', context)
+
+    
+
+
+    return render(request, 'jobs-list.html', context)

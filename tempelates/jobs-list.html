@@ -1,6 +1,9 @@
 <form method="GET" action="{% url 'jobs-list' %}">
-    <input type="text" name="q" placeholder="Search for a job"/>
-<hr>
+    <input type="text" name="q" placeholder="Search for a job or city"/>
+    <input type="submit" value="Search">
+    <hr>
+</form>
+
 <style>
     .job-page-container{
         display: grid;
