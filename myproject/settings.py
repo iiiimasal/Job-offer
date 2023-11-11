@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'projects.apps.ProjectsConfig',
 ]
 
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

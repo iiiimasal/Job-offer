@@ -1,31 +1,19 @@
 from collections import Counter
 from django.shortcuts import render , redirect
 from django.http import HttpResponse
-from .models import Company , Job ,Employee , Message
+from .models import Company , Job  , Message
 from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth import authenticate,login,logout
 from django.contrib.auth.models import User ,Group
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
-from .form import JobForm ,CompanyForm ,EmployerRegistrationForm
+from .form import JobForm ,CompanyForm ,NormalUserForm
 from django.views.generic.edit import CreateView
 from django.utils.decorators import method_decorator
+from .utils import create_user
 
 
-
-#  q=request.GET.get('q') if request.GET.get('q') !=None else ''
-
-#  Companies=Company.objects.filter(
-#                               Q(name__icontains=q)|
-#                               Q(city__icontains=q)
-#                               )
-
-#  context={'Companies':Companies}
-# Companies=Company.objects.all()
-# context={'companies':Companies}
-
-# return render(request,'home.html',context) 
 
 def loginPage(request):
     page='login'
@@ -60,19 +48,6 @@ def registerPage(request):
     form=UserCreationForm()
     return render(request, 'login_register.html', {'form':form})
 
-# def home(request):
-#     q = request.GET.get('q', '') if request.GET.get('q') is not None else ''
-#     # jobs=Job.objects.filter(Q(topic__name__icontains=q)|
-#     #                           Q(name__icontains=q)|
-#     #                           Q(description__icontains=q)
-#     #                           )
-#     # Retrieve a list of unique cities from your Company model
-#     cities = Company.objects.values('city').distinct().order_by('city')
-
-#     jobs=Job.objects.all()
-#     context = {'jobs':jobs,'cities': [city['city'] for city in cities], 'q': q }
-#     print(jobs)
-#     return render(request, 'home.html', context) 
 
 def home(request):
     q = request.GET.get('q') if request.GET.get('q') is not None else ''
@@ -110,6 +85,40 @@ def company(request,pk):
     context={'company':company,'messages':messages ,'participants':participants}        
     return render(request,'company.html',context)
 
+
+def create_normal_user(request):
+    if request.method == 'POST':
+        form = NormalUserForm(request.POST)
+
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+            is_employer = form.cleaned_data.get('is_employer', False)
+            is_employee = form.cleaned_data.get('is_employee', False)
+
+            if is_employer and is_employee:
+                # You may want to handle this case based on your application's logic
+                return render(request, 'error_page.html', {'message': 'Please choose either employer or employee.'})
+            
+            user = create_user(username, email, password, is_employer=is_employer, is_employee=is_employee)
+
+            if is_employer:
+                # Redirect to the employer-specific page
+                return render(request, 'employer_page.html', {'user': user})
+            elif is_employee:
+                # Redirect to the employee-specific page
+                return render(request, 'employee_page.html', {'user': user})
+            else:
+                # Redirect to a default page or handle as needed
+                return render(request, 'home.html', {'user': user})
+
+    else:
+        form = NormalUserForm()
+
+    return render(request, 'user-registeration.html', {'form': form})
+
+
 def userProfile(request, pk):
     user=User.objects.get(id=pk)
     companies=user.company_set.all()
@@ -135,39 +144,6 @@ def createCompany(request):
 
 
 
-
-
-def employer_registration(request):
-    if request.method == 'POST':
-        form = EmployerRegistrationForm(request.POST)
-        if form.is_valid():
-            user = User.objects.create_user(
-                username=form.cleaned_data['username'],
-                email=form.cleaned_data['email'],
-                password=form.cleaned_data['password'],
-                first_name=form.cleaned_data['first_name'],  # Add first name field
-                last_name=form.cleaned_data['last_name'],    # Add last name field
-                # gender=form.cleaned_data['gender'],
-                city=form.cleaned_data['city'],
-                certificate=form.cleaned_data['certificate'],
-                degree=form.cleaned_data['degree'],
-                age=form.cleaned_data['age'],
-                job=form.cleaned_data['job'],
-            )
-
-            # Check if the user chose to be an employee
-            if form.cleaned_data.get('is_employer'):
-                employee_group, created = Group.objects.get_or_create(name='Employers')
-                user.groups.add(employer_group)
-            else:
-                employer_group, created = Group.objects.get_or_create(name='Employees')
-                user.groups.add(employee_group)
-            return redirect('login')  # Use the correct name of your login view
-
-    else:
-        form = EmployerRegistrationForm()
-
-    return render(request, 'employer-register.html', {'form': form})
 
 
 def updatecompany(request,pk):
@@ -230,23 +206,6 @@ def create_job(request):
     return render(request, 'create-job.html', {'form': form})
 
 
-# def job_page(request):
-#     q = request.GET.get('q') if request.GET.get('q') is not None else ''
-#     city = request.GET.get('city', '')
-#     jobs = Job.objects.filter(title__icontains=q, company__city__icontains=city)
-#     titles = Job.objects.values('title').distinct()
-#     cities = Company.objects.values('city').distinct()
-    
-#     context = {'jobs': jobs, 'titles': titles, 'cities': cities}
-
-#     # companies=Company.objects.all()
-#     context={'jobs':jobs,'titles':titles,'cities':cities}
-#     print(context)
-#     return render(request, 'jobs-list.html', context) 
-
-
-
-
 
 def job_page(request):
     query = request.GET.get('q', '')
@@ -275,5 +234,3 @@ def job_page(request):
 
     
 
-
-    return render(request, 'jobs-list.html', context)
