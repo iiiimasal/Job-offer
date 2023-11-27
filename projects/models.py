@@ -11,6 +11,34 @@ class normalUser(models.Model):
     def __str__(self):
         return self.user.username  
 
+class Employer(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    company = models.ForeignKey('Company', on_delete=models.SET_NULL, null=True, blank=True)
+    telephone_number = models.CharField(max_length=15, null=True, blank=True)
+    gender = models.CharField(max_length=10, null=True, blank=True)
+    city = models.CharField(max_length=50, null=True, blank=True)
+    certificate = models.CharField(max_length=100, null=True, blank=True)
+    degree = models.CharField(max_length=50, null=True, blank=True)
+    age = models.IntegerField(null=True, blank=True)
+    job = models.CharField(max_length=100, null=True, blank=True)
+
+    def __str__(self):
+        return self.user.username  
+
+class Employee(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    company = models.ForeignKey('Company', on_delete=models.SET_NULL, null=True, blank=True)
+    telephone_number = models.CharField(max_length=15, null=True, blank=True)
+    gender = models.CharField(max_length=10, null=True, blank=True)
+    city = models.CharField(max_length=50, null=True, blank=True)
+    certificate = models.CharField(max_length=100, null=True, blank=True)
+    degree = models.CharField(max_length=50, null=True, blank=True)
+    age = models.IntegerField(null=True, blank=True)
+    job = models.CharField(max_length=100, null=True, blank=True)
+
+    def __str__(self):
+        return self.user.username  
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

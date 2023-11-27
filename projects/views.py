@@ -1,14 +1,14 @@
 from collections import Counter
 from django.shortcuts import render , redirect
 from django.http import HttpResponse
-from .models import Company , Job  , Message
+from .models import Company , Job  , Message , Employer ,Employee
 from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth import authenticate,login,logout
 from django.contrib.auth.models import User ,Group
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
-from .form import JobForm ,CompanyForm ,NormalUserForm
+from .form import JobForm ,CompanyForm ,NormalUserForm ,EmployerRegistrationForm , EmployeeRegistrationForm
 from django.views.generic.edit import CreateView
 from django.utils.decorators import method_decorator
 from .utils import create_user
@@ -104,19 +104,78 @@ def create_normal_user(request):
             user = create_user(username, email, password, is_employer=is_employer, is_employee=is_employee)
 
             if is_employer:
+                print(user.id)
+               
                 # Redirect to the employer-specific page
-                return render(request, 'employer_page.html', {'user': user})
+                return render(request,'employer_page.html',  {'user_id': user.id})
             elif is_employee:
                 # Redirect to the employee-specific page
-                return render(request, 'employee_page.html', {'user': user})
+                return render(request, 'employee_page.html',  {'user_id': user.id})
             else:
                 # Redirect to a default page or handle as needed
-                return render(request, 'home.html', {'user': user})
+                return render(request, 'login_register.html', {'user': user})
 
     else:
         form = NormalUserForm()
 
     return render(request, 'user-registeration.html', {'form': form})
+
+def employer_registration(request, user_id):
+    user = User.objects.get(id=user_id)
+
+    if request.method == 'POST':
+        employer_form = EmployerRegistrationForm(request.POST)
+        if employer_form.is_valid():
+            # Create an Employer object
+            employer = Employer.objects.create(
+                user=user,
+                telephone_number=employer_form.cleaned_data['telephone_number'],
+                gender=employer_form.cleaned_data['gender'],
+                certificate=employer_form.cleaned_data['certificate'],
+                degree=employer_form.cleaned_data['degree'],
+                age=employer_form.cleaned_data['age'],
+                city=employer_form.cleaned_data['city'],
+                job=employer_form.cleaned_data['job'],
+            )
+
+            # Redirect to a success page or perform other actions
+            return redirect('home-page')  # Adjust the URL as needed
+
+ 
+        else:
+         employer_form = EmployerRegistrationForm()
+         return render(request, 'employer_page.html', {'employer_form': employer_form, 'user_id': user_id})
+
+
+
+def employee_registration(request, user_id):
+    user = User.objects.get(id=user_id)
+
+    if request.method == 'POST':
+        employee_form = EmployeeRegistrationForm(request.POST)
+        if employee_form.is_valid():
+            # Create an Employee object
+            employee = Employee.objects.create(
+                user=user,
+                telephone_number=employee_form.cleaned_data['telephone_number'],
+                gender=employee_form.cleaned_data['gender'],
+                certificate=employee_form.cleaned_data['certificate'],
+                degree=employee_form.cleaned_data['degree'],
+                age=employee_form.cleaned_data['age'],
+                city=employee_form.cleaned_data['city'],
+                job=employee_form.cleaned_data['job'],
+            )
+
+            # Redirect to a success page or perform other actions
+            return redirect('home-page')  # Adjust the URL as needed
+
+ 
+        else:
+         employee_form = EmployeeRegistrationForm()
+         return render(request, 'employee_page.html', {'employee_form': employee_form, 'user_id': user_id})
+
+
+
 
 
 def userProfile(request, pk):
@@ -127,7 +186,7 @@ def userProfile(request, pk):
 
 @login_required(login_url='login')
 def createCompany(request):
-    if not request.user.groups.filter(name='Employees').exists():
+    if not request.user.groups.filter(name='Employers').exists():
         # If not, redirect them to another page or show an error message
         messages.error(request, "You don't have permission to create a company.")
         return redirect('home-page')
