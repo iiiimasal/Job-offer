@@ -9,10 +9,13 @@ class JobForm(ModelForm):
     class Meta:
         model = Job
         fields = '__all__'
+        
 class CompanyForm(ModelForm):
     class Meta:
         model = Company
-        fields =  ['user','name', 'email', 'telephone_number', 'manager','city']
+        fields = '__all__'
+        exclude=['user','participants','jobs']
+        # fields =  ['user','name', 'email', 'telephone_number', 'manager','city']
 
 class NormalUserForm(forms.Form):
     username = forms.CharField(max_length=150)

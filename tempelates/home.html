@@ -1,5 +1,11 @@
 {% include 'navbar.html' %}
+{% load static %}
+<head>
+    <link rel="stylesheet" href="{% static 'styles/main.css' %}">
 
+
+</head>
+{% load static %}
 <div>
     <a href="{% url 'create-Company' %}">create Company</a>
 </div>
