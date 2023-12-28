@@ -19,6 +19,7 @@ urlpatterns = [
     path('register-user/<str:user_id>',views.employer_registration,name='employer-registration'),
     path('register-user/<str:user_id>',views.employee_registration,name='employee-registration'),
     path('delete-message/<str:pk>/',views.deleteMessage,name='delete-message'),
-    path('create-job/', views.create_job, name='create-job'),
-    path('jobs-list/', views.job_page, name='jobs-list')
+    # path('create-job/', views.create_job, name='create-job'),
+    path('create-commercials/', views.createCommercials, name='create-commercials'),
+    path('list-commercials/', views.listCommercials, name='list-commercials'),
 ]

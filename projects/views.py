@@ -1,14 +1,14 @@
 from collections import Counter
 from django.shortcuts import render , redirect
 from django.http import HttpResponse
-from .models import Company , Job  , Message , Employer ,Employee
+from .models import Company , Job  , Message , Employer ,Employee,JobCommercial
 from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth import authenticate,login,logout
 from django.contrib.auth.models import User ,Group
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
-from .form import JobForm ,CompanyForm ,NormalUserForm ,EmployerRegistrationForm , EmployeeRegistrationForm
+from .form import JobCommercialForm,JobForm ,CompanyForm ,NormalUserForm ,EmployerRegistrationForm , EmployeeRegistrationForm
 from django.views.generic.edit import CreateView
 from django.utils.decorators import method_decorator
 from .utils import create_user
@@ -251,28 +251,84 @@ def deleteMessage(request , pk):
     
     return render(request,'delete.html',{'obj':message})
 
+# @login_required(login_url='login')
+# def create_job(request):
+#     if request.method == 'POST':
+#         form = JobForm(request.POST)
+#         if form.is_valid():
+#             job = form.save(commit=False)
+#             # job.company = request.user.emoloyer.company  # Assign the current user's company to the job
+#             job.save()
+#             return redirect('home-page')  # Replace 'jobs-list' with the URL of the job listings page
+
+#     else:
+#         form = JobForm()
+
+#     return render(request, 'create-job.html', {'form': form})
+
+
+
+# def job_page(request):
+#     query = request.GET.get('q', '')
+#     jobs = Job.objects.all()
+#     titles = Job.objects.values('title').distinct()
+#     cities = Company.objects.values('city').distinct()
+
+#     if query:
+#         # Split the query into words
+#         words = query.split()
+
+#         # Create a Q object to build the filter dynamically
+#         q_objects = Q()
+
+#         for word in words:
+#             # You can define how to filter the job listings here
+#             # For example, you can search in job titles and company cities
+#             q_objects |= Q(title__icontains=word) | Q(company__city__icontains=word)
+
+#         # Apply the filter
+#         jobs = jobs.filter(q_objects)
+
+#     context = {'jobs': jobs, 'query': query, 'titles': titles, 'cities': cities}
+
+#     return render(request, 'jobs-list.html', context)
+
+
 @login_required(login_url='login')
-def create_job(request):
+def createCommercials(request):
+    if not request.user.groups.filter(name='Employers').exists():
+        messages.error(request, "You don't have permission to submit a commercial first login.")
+        return redirect('home-page')
+    
     if request.method == 'POST':
-        form = JobForm(request.POST)
+        form = JobCommercialForm(request.user, request.POST)
         if form.is_valid():
-            job = form.save(commit=False)
-            # job.company = request.user.emoloyer.company  # Assign the current user's company to the job
-            job.save()
-            return redirect('home-page')  # Replace 'jobs-list' with the URL of the job listings page
+            commercial = form.save(commit=False)
+            commercial.user = request.user
+            commercial.save()
 
+            # Now, associate the selected companies with the commercial
+            selected_companies = request.POST.getlist('companies')
+            commercial.companies.set(selected_companies)
+
+            return redirect('home-page')
     else:
-        form = JobForm()
+        form = JobCommercialForm(request.user)
 
-    return render(request, 'create-job.html', {'form': form})
+    context = {'form': form}
+    return render(request, 'commercial-form.html', context)
 
 
-
-def job_page(request):
+@login_required(login_url='login')
+def listCommercials(request):
+    commercials = JobCommercial.objects.all()
     query = request.GET.get('q', '')
-    jobs = Job.objects.all()
-    titles = Job.objects.values('title').distinct()
-    cities = Company.objects.values('city').distinct()
+    
+    titles = JobCommercial.objects.values('subject').distinct()
+
+
+    # Retrieve all commercials from the database
+    
 
     if query:
         # Split the query into words
@@ -282,16 +338,15 @@ def job_page(request):
         q_objects = Q()
 
         for word in words:
-            # You can define how to filter the job listings here
-            # For example, you can search in job titles and company cities
-            q_objects |= Q(title__icontains=word) | Q(company__city__icontains=word)
+            
+           q_objects |= Q(subject__icontains=word)
+
 
         # Apply the filter
-        jobs = jobs.filter(q_objects)
+        commercials = commercials.filter(q_objects)
 
-    context = {'jobs': jobs, 'query': query, 'titles': titles, 'cities': cities}
+    # Render the template with the list of commercials
+    context = {'commercials': commercials,'query': query, 'titles': titles}
+    return render(request, 'commercials_list.html', context)
 
-    return render(request, 'jobs-list.html', context)
-
-    
 

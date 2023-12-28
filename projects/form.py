@@ -1,5 +1,5 @@
 from django.forms import ModelForm
-from .models import Company , Job , Employer ,Employee
+from .models import Company , Job , Employer ,Employee ,JobCommercial
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
@@ -14,7 +14,7 @@ class CompanyForm(ModelForm):
     class Meta:
         model = Company
         fields = '__all__'
-        exclude=['user','participants','jobs']
+        exclude=['user','participants','jobs','commercials']
         # fields =  ['user','name', 'email', 'telephone_number', 'manager','city']
 
 class NormalUserForm(forms.Form):
@@ -36,3 +36,16 @@ class EmployeeRegistrationForm(ModelForm):
         fields =  ['user','telephone_number', 'gender', 'certificate', 'degree','age','city','job']
 
 
+class JobCommercialForm(forms.ModelForm):
+    def __init__(self, user, *args, **kwargs):
+        super(JobCommercialForm, self).__init__(*args, **kwargs)
+        # Filter the queryset for the companies field based on the user
+        self.fields['companies'].queryset = Company.objects.filter(user=user)
+
+    companies = forms.ModelMultipleChoiceField(
+        queryset=Company.objects.none(),  # Initially, an empty queryset
+        widget=forms.CheckboxSelectMultiple
+    )
+    class Meta:
+        model = JobCommercial
+        fields = ['subject', 'talents', 'description', 'date', 'companies']

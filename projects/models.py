@@ -61,7 +61,9 @@ class Job(models.Model):
     description = models.TextField()
 
 
-# Define the Company model
+# models.py
+from django.db import models
+
 class Company(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
@@ -69,15 +71,29 @@ class Company(models.Model):
     telephone_number = models.CharField(max_length=15)
     city = models.CharField(max_length=50)
     manager = models.CharField(max_length=100)
-    jobs = models.ManyToManyField(Job, related_name='company_jobs')  # Reference the Job model
+    jobs = models.ManyToManyField(Job, related_name='company_jobs')
     participants = models.ManyToManyField(User, related_name='companies_participated_in')
-    # Add other fields and methods as needed
+    commercials = models.ManyToManyField('JobCommercial', related_name='companies_commercials', blank=True)
 
     def get_user_id(self):
         return self.user.id
 
     def __str__(self):
         return self.name
+
+
+class JobCommercial(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    Jid = models.AutoField(primary_key=True)
+    subject = models.CharField(max_length=100)
+    talents=models.TextField()
+    description = models.TextField()
+    date = models.DateField()
+    companies = models.ManyToManyField('Company', related_name='commercials_companies', blank=True)
+
+    def __str__(self):
+        return self.subject
+
 
 
 class Message(models.Model):
@@ -88,3 +104,8 @@ class Message(models.Model):
 
     def __str__(self):
         return self.body[:50]
+
+
+
+
+
