@@ -1,0 +1,56 @@
+<form method="GET" action="{% url 'jobs-list' %}">
+    <input type="text" name="q" placeholder="Search for a job or city"/>
+    <input type="submit" value="Search">
+    <hr>
+</form>
+
+<style>
+    .job-page-container{
+        display: grid;
+        grid-template-columns: 1fr 3fr;
+    }
+</style>
+<div class="job-page-container">
+    <div>
+        <h3>Browse jobs</h3>
+        <hr>
+        <div>
+            <a href="{% url 'jobs-list' %}">ALL</a>
+        </div>
+        {% for title in titles %}
+
+            <div>
+                <a href="{% url 'jobs-list' %}?q={{ title.title }}">{{title.title}}</a>
+            </div>
+        {% endfor %}
+        {% for city in cities %}
+            <div>
+                <a href="{% url 'jobs-list' %}?city={{ city.city }}">{{ city.city }}</a>
+            </div>
+        {% endfor %}
+
+    </div>
+
+    <div>
+        <h1>Job Listings</h1>
+        {% for job in jobs %}
+        <div>
+            
+            <li>
+                <h2>{{ job.title }}</h2>
+                <p>{{ job.description }}</p>
+                <p>Location: {{ job.company.city }}</p>
+                <p>Email: {{ job.company.email }}</p>
+                <p>Telephone Number: {{ job.company.telephone_number }}</p>
+                <p>Manager of the company: {{ job.company.manager }}</p>
+                <p>User: @{{ job.company.user }}</p>
+                <hr>
+            </li>
+            {% empty %}
+            <li>No jobs found.</li>
+        </div>
+        {% endfor %}
+    
+    </div>
+
+</div>

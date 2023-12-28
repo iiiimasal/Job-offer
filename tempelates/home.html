@@ -1,5 +1,11 @@
 {% include 'navbar.html' %}
+{% load static %}
+<head>
+    <link rel="stylesheet" href="{% static 'styles/main.css' %}">
 
+
+</head>
+{% load static %}
 <div>
     <a href="{% url 'create-Company' %}">create Company</a>
 </div>
@@ -36,7 +42,8 @@
             {% endif %}
             
           
-            <span>@{{company.user.username}}</span>
+            <a href="{% url 'user-profile' company.user.id %}">@{{company.user.username}}</a>
+
             <h5>{{company.id}} -- <a href="/company/{{company.id}}">{{company.name}}</a ></h5>
             <h5>{{company.email}}</h5>
             <h5>{{company.city}}</h5>
@@ -44,7 +51,7 @@
             <hr>
         </div>
         {% endfor %}
-     </div>
+     
     </div>
 </div>
 
